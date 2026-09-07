@@ -1,0 +1,45 @@
+name: Vendor Vazirmatn font
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-font:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch exact Vazirmatn UI Farsi Digits font
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="plugins/wp-security-challenge/public/assets/fonts/Vazirmatn-UI-FD-NL-Regular.woff2"
+          URL="https://raw.githubusercontent.com/rastikerdar/vazirmatn/master/misc/UI-Farsi-Digits-Non-Latin/fonts/webfonts/Vazirmatn-UI-FD-NL-Regular.woff2"
+          mkdir -p "$(dirname "$TARGET")"
+          curl --fail --location --silent --show-error "$URL" --output "$TARGET"
+          test "$(wc -c < "$TARGET" | tr -d ' ')" = "21484"
+          HASH=$(printf 'blob 21484\0' | cat - "$TARGET" | sha1sum | awk '{print $1}')
+          test "$HASH" = "13adfe8a466300d3809b2c1a1f28c01e59ed3092"
+
+      - name: Commit font if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="plugins/wp-security-challenge/public/assets/fonts/Vazirmatn-UI-FD-NL-Regular.woff2"
+          if git diff --quiet -- "$TARGET"; then
+            echo "Font is already exact."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET"
+          git commit -m "Fix full local Vazirmatn font binary"
+          git push origin HEAD:main
