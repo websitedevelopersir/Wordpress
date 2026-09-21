@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: WordPress Security Challenge
- * Description: Lightweight risk-based browser verification and conditional CAPTCHA gate for guest visitors.
- * Version: 1.2.1
+ * Description: Risk-based browser verification, conditional CAPTCHA, and file-integrity monitoring for WordPress.
+ * Version: 1.3.0
  * Requires at least: 6.2
  * Requires PHP: 7.4
  * Author: Mode Media
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'WPSC_VERSION', '1.2.1' );
+define( 'WPSC_VERSION', '1.3.0' );
 define( 'WPSC_FILE', __FILE__ );
 define( 'WPSC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPSC_URL', plugin_dir_url( __FILE__ ) );
@@ -23,9 +23,13 @@ require_once WPSC_DIR . 'includes/class-wpsc-token.php';
 require_once WPSC_DIR . 'includes/class-wpsc-bypass.php';
 require_once WPSC_DIR . 'includes/class-wpsc-risk-engine.php';
 require_once WPSC_DIR . 'includes/class-wpsc-captcha.php';
+require_once WPSC_DIR . 'includes/class-wpsc-file-monitor.php';
 require_once WPSC_DIR . 'includes/class-wpsc-gate.php';
 require_once WPSC_DIR . 'admin/class-wpsc-admin.php';
+require_once WPSC_DIR . 'admin/class-wpsc-file-monitor-admin.php';
 require_once WPSC_DIR . 'includes/class-wpsc-plugin.php';
 
 register_activation_hook( __FILE__, array( 'WPSC_Plugin', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'WPSC_Plugin', 'deactivate' ) );
+
 WPSC_Plugin::instance();
