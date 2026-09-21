@@ -3,7 +3,7 @@ Contributors: modemedia
 Tags: security, captcha, browser challenge, bot protection, rate limit
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 
 Risk-based browser verification for guest visitors with a conditional internal CAPTCHA.
 
@@ -39,3 +39,13 @@ This plugin is a browser challenge layer, not a replacement for a server/WAF fir
 * Fixed horizontal scrolling on mobile challenge screens.
 * Hardened responsive widths, safe-area padding and clipping for decorative/animated elements.
 * Added 360px, 390px, 480px and 768px responsive safeguards without affecting destination pages.
+
+
+= 1.3.0 =
+* بازطراحی صفحه Challenge با ظاهر مینیمال و طبیعی‌تر.
+* اضافه شدن File Integrity Monitor با Baseline و SHA-256.
+* تشخیص فایل‌های جدید، تغییرکرده و حذف‌شده در هسته وردپرس و مسیرهای حساس.
+* هشدار Critical برای فایل‌های اجرایی در uploads و تغییرات هسته.
+* ثبت رویدادها در پیشخوان و ارسال ایمیل برای رویدادهای High/Critical.
+* تشخیص پنجره تغییر مجاز برای آپدیت‌های استاندارد وردپرس و ویرایش مدیر.
+* امکان اسکن فوری، ساخت مجدد Baseline و پنجره تغییر مجاز ۱۵ دقیقه‌ای.
