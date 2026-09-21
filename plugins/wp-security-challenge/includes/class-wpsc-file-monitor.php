@@ -59,7 +59,9 @@ final class WPSC_File_Monitor {
     }
 
     public static function save_settings( $input ) {
+        global $wpdb;
         $d = self::defaults();
+        $previous = self::settings();
         $scope = isset( $input['scope'] ) && 'public_html' === $input['scope'] ? 'public_html' : 'smart';
         $out = array(
             'enabled'        => empty( $input['enabled'] ) ? '0' : '1',
@@ -72,6 +74,14 @@ final class WPSC_File_Monitor {
             'excluded_paths' => sanitize_textarea_field( $input['excluded_paths'] ?? $d['excluded_paths'] ),
         );
         update_option( 'wpsc_fim_settings', $out, false );
+
+        if ( $previous['scope'] !== $out['scope'] || $previous['excluded_paths'] !== $out['excluded_paths'] ) {
+            $self = self::instance();
+            $wpdb->query( "TRUNCATE TABLE {$self->baseline_table}" );
+            delete_option( 'wpsc_fim_baseline_ready' );
+            wp_schedule_single_event( time() + 10, self::CRON_HOOK );
+        }
+
         self::instance()->ensure_schedule( true );
         return $out;
     }
