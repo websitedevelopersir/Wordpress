@@ -186,10 +186,13 @@ final class WPSC_Gate {
         header( 'X-Robots-Tag: noindex, nofollow, noarchive', true );
         header( 'Referrer-Policy: same-origin', true );
         header( 'X-Content-Type-Options: nosniff', true );
+        header( 'X-Frame-Options: SAMEORIGIN', true );
+        header( 'X-WPSC-Challenge: 1', true );
 
         $s = WPSC_Settings::instance();
         $return  = $this->return_url();
         $gate_id = wp_generate_uuid4();
+        $site_host = (string) wp_parse_url( home_url( '/' ), PHP_URL_HOST );
         set_transient( 'wpsc_gate_' . md5( $gate_id ), array( 'started' => microtime( true ), 'return' => $return ), 10 * MINUTE_IN_SECONDS );
 
         $config = array(
@@ -229,7 +232,7 @@ final class WPSC_Gate {
     <section class="wpsc-card" id="wpsc-card">
         <div class="wpsc-topline">
             <span class="wpsc-brand-dot"></span>
-            <span><?php echo esc_html( $s->get( 'brand_title' ) ); ?></span>
+            <span><?php echo esc_html( $site_host ? $site_host : $s->get( 'brand_title' ) ); ?></span>
             <span class="wpsc-secure-pill">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 19 5.7v5.7c0 4.5-2.9 8.6-7 9.8-4.1-1.2-7-5.3-7-9.8V5.7L12 2.8Zm-1 12.3 5-5-1.4-1.4-3.6 3.6-1.7-1.7L7.9 12l3.1 3.1Z"/></svg>
                 <?php echo esc_html( $s->get( 'secure_label' ) ); ?>
@@ -287,6 +290,8 @@ final class WPSC_Gate {
             <span><?php echo esc_html( $s->get( 'privacy_text' ) ); ?></span>
             <span class="wpsc-bottom-sep"></span>
             <span><?php echo esc_html( $s->get( 'footer_text' ) ); ?></span>
+            <span class="wpsc-bottom-sep"></span>
+            <span>شناسه بررسی: <?php echo esc_html( substr( str_replace( '-', '', $gate_id ), 0, 12 ) ); ?></span>
         </div>
     </section>
 </main>
