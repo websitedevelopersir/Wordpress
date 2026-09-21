@@ -246,29 +246,30 @@ final class WPSC_File_Monitor {
 
     private function files_for_scope( $scope, $excluded_raw ) {
         $excluded = array_filter( array_map( array( $this, 'normalize_relative' ), preg_split( '/[\r\n,]+/', (string) $excluded_raw ) ) );
-        $files = array();
 
         if ( 'public_html' === $scope ) {
-            $this->collect_recursive( ABSPATH, '', $files, $excluded, false );
-            return $files;
+            yield from $this->walk_recursive( ABSPATH, '', $excluded, false );
+            return;
         }
 
         try {
             foreach ( new DirectoryIterator( ABSPATH ) as $item ) {
                 if ( $item->isDot() || ! $item->isFile() ) continue;
                 $relative = $this->normalize_relative( $item->getFilename() );
-                if ( ! $this->is_excluded( $relative, $excluded ) ) $files[ $item->getPathname() ] = $relative;
+                if ( ! $this->is_excluded( $relative, $excluded ) ) {
+                    yield $item->getPathname() => $relative;
+                }
             }
         } catch ( Exception $e ) {}
 
-        $this->collect_recursive( ABSPATH . 'wp-admin', 'wp-admin', $files, $excluded, false );
-        $this->collect_recursive( ABSPATH . WPINC, WPINC, $files, $excluded, false );
-        $this->collect_recursive( WP_CONTENT_DIR, 'wp-content', $files, $excluded, true );
-        return $files;
+        yield from $this->walk_recursive( ABSPATH . 'wp-admin', 'wp-admin', $excluded, false );
+        yield from $this->walk_recursive( ABSPATH . WPINC, WPINC, $excluded, false );
+        yield from $this->walk_recursive( WP_CONTENT_DIR, 'wp-content', $excluded, true );
     }
 
-    private function collect_recursive( $root, $prefix, &$files, $excluded, $risky_only ) {
+    private function walk_recursive( $root, $prefix, $excluded, $risky_only ) {
         if ( ! is_dir( $root ) ) return;
+
         try {
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveCallbackFilterIterator(
@@ -281,14 +282,17 @@ final class WPSC_File_Monitor {
                 ),
                 RecursiveIteratorIterator::LEAVES_ONLY
             );
+
             foreach ( $iterator as $file ) {
                 if ( ! $file->isFile() ) continue;
                 $sub = ltrim( str_replace( wp_normalize_path( $root ), '', wp_normalize_path( $file->getPathname() ) ), '/' );
                 $relative = $this->normalize_relative( trim( $prefix . '/' . $sub, '/' ) );
                 if ( $risky_only && ! $this->is_risky_path( $relative ) ) continue;
-                $files[ $file->getPathname() ] = $relative;
+                yield $file->getPathname() => $relative;
             }
-        } catch ( UnexpectedValueException $e ) {}
+        } catch ( UnexpectedValueException $e ) {
+            return;
+        }
     }
 
     private function is_risky_path( $path ) {
@@ -322,7 +326,7 @@ final class WPSC_File_Monitor {
         $severity = $this->severity( $type, $path );
         $details = wp_json_encode( array(
             'source' => 'external_or_unverified',
-            'ip' => WPSC_Risk_Engine::client_ip(),
+            'detected_context' => wp_doing_cron() ? 'cron' : ( is_admin() ? 'admin' : 'request' ),
             'user_id' => get_current_user_id(),
             'size' => (int) $meta['size'],
             'mtime' => (int) $meta['mtime'],
