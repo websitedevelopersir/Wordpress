@@ -19,3 +19,13 @@ jobs:
         run: find plugins/wp-security-challenge -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: JavaScript syntax
         run: node --check plugins/wp-security-challenge/public/assets/js/gate.js
+      - name: Build installable ZIP
+        run: |
+          cd plugins
+          zip -qr ../wp-security-challenge-v1.3.0.zip wp-security-challenge
+      - name: Upload plugin ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-security-challenge-v1.3.0
+          path: wp-security-challenge-v1.3.0.zip
+          if-no-files-found: error
